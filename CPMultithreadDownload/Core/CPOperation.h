@@ -7,7 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 @interface CPOperation : NSOperation
+
+- (instancetype)initWithRequest:(NSURLRequest *)urlRequest;
 
 @end
