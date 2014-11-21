@@ -15,6 +15,9 @@ typedef NS_ENUM(NSInteger, CPOperationState){
     CPOperationFinishedState    = 3,
 };
 
+static NSString * const kAFNetworkingLockName = @"com.alamofire.networking.operation.lock";
+NSString * const AFNetworkingOperationDidStartNotification = @"com.alamofire.networking.operation.start";
+
 typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long totalBytes, long long totalBytesExpected);
 
 @interface CPOperation()
@@ -22,6 +25,10 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 @property (nonatomic, strong) NSSet *runLoopModes;
 @property (nonatomic, strong) NSURLRequest *request;
 @property (nonatomic, assign) CPOperationState state;
+@property (nonatomic, strong) NSRecursiveLock *lock;
+@property (nonatomic, strong) NSError *error;
+@property (nonatomic, strong) NSURLSession *downlSession;
+@property (nonatomic, strong) NSURLSessionDownloadTask *downloadTask;
 
 @end
 
@@ -81,6 +88,8 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
         return nil;
     }
     
+    self.lock = [[NSRecursiveLock alloc] init];
+    self.lock.name = CPDownloadLockName;
     self.request = urlRequest;
     self.state = CPOperationReadyState;
     self.runLoopModes = [NSSet setWithObject:NSRunLoopCommonModes];
@@ -103,20 +112,80 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
     return self.state == CPOperationFinishedState;
 }
 
-- (BOOL)isConcurrent {
+- (BOOL)isAsynchronous {
     return YES;
 }
 
 - (void)start
 {
-    //use NSURLSession to download zip
+    [self.lock lock];
+    if ([self isCancelled]) {
+        [self performSelector:@selector(cancelConnection) onThread:[[self class] downloadThread] withObject:nil waitUntilDone:NO modes:[self.runLoopModes allObjects]];
+    } else if ([self isReady]) {
+        self.state = CPOperationExecutingState;
+        
+        [self performSelector:@selector(operationDidStart) onThread:[[self class] downloadThread] withObject:nil waitUntilDone:NO modes:[self.runLoopModes allObjects]];
+    }
+    [self.lock unlock];
+    
     
 }
 
 - (void)cancel
 {
+    [self.lock lock];
+    if (![self isFinished] && ![self isCancelled]) {
+        [super cancel];
+        
+        if ([self isExecuting]) {
+            [self performSelector:@selector(cancelConnection) onThread:[[self class] downloadThread] withObject:nil waitUntilDone:NO modes:[self.runLoopModes allObjects]];
+        }
+    }
+    [self.lock unlock];
+}
+
+- (void)operationDidStart
+{
+    [self.lock lock];
+    if (![self isCancelled]) {
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"CPOperationSession"];
+            //TODO (NSURLSession *)sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(id <NSURLSessionDelegate>)delegate delegateQueue:(NSOperationQueue *)queue;
+            self.downlSession = [NSURLSession sessionWithConfiguration:configuration];
+            self.downloadTask = [self.downlSession downloadTaskWithRequest:self.request];
+            [_downloadTask resume];
+        });
+        
+    }
+    [self.lock unlock];
     
 }
+
+- (void)cancelConnection
+{
+    NSDictionary *userInfo = nil;
+    if ([self.request URL]) {
+        userInfo = [NSDictionary dictionaryWithObject:[self.request URL] forKey:NSURLErrorFailingURLErrorKey];
+    }
+    NSError *error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCancelled userInfo:userInfo];
+    
+    if (![self isFinished]) {
+        if (self.downlSession) {
+            [self.downloadTask cancel];
+            [self performSelector:@selector(session:didFailWithError:) withObject:self.downlSession withObject:error];
+        }
+    }
+}
+
+- (void)session:(NSURLSession *)session didFailWithError:(NSError *)error
+{
+    self.error = error;
+}
+
+#pragma mark -
+#pragma mark - NSURLSessionDelegate and init
+
 
 
 
