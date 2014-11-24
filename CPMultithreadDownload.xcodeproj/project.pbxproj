@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		565261D41A1B3CA900E0D78A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 565261D31A1B3CA900E0D78A /* main.m */; };
 		565261D71A1B3CA900E0D78A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 565261D61A1B3CA900E0D78A /* AppDelegate.m */; };
-		565261DA1A1B3CA900E0D78A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 565261D91A1B3CA900E0D78A /* ViewController.m */; };
 		565261DD1A1B3CA900E0D78A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 565261DB1A1B3CA900E0D78A /* Main.storyboard */; };
 		565261DF1A1B3CA900E0D78A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 565261DE1A1B3CA900E0D78A /* Images.xcassets */; };
 		565261E21A1B3CA900E0D78A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 565261E01A1B3CA900E0D78A /* LaunchScreen.xib */; };
@@ -19,6 +18,7 @@
 		565262081A1B549D00E0D78A /* CPOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 565262071A1B549D00E0D78A /* CPOperation.m */; };
 		5652620B1A1B573800E0D78A /* CPZipArchiveOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 5652620A1A1B573800E0D78A /* CPZipArchiveOperation.m */; };
 		5652620E1A1B591D00E0D78A /* CPObserverOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 5652620D1A1B591D00E0D78A /* CPObserverOperation.m */; };
+		566AA6C41A22C10A00AE196B /* CPDownloadViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 566AA6C31A22C10A00AE196B /* CPDownloadViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,8 +37,6 @@
 		565261D31A1B3CA900E0D78A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		565261D51A1B3CA900E0D78A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		565261D61A1B3CA900E0D78A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		565261D81A1B3CA900E0D78A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		565261D91A1B3CA900E0D78A /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		565261DC1A1B3CA900E0D78A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		565261DE1A1B3CA900E0D78A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		565261E11A1B3CA900E0D78A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -55,6 +53,8 @@
 		5652620A1A1B573800E0D78A /* CPZipArchiveOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPZipArchiveOperation.m; sourceTree = "<group>"; };
 		5652620C1A1B591D00E0D78A /* CPObserverOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPObserverOperation.h; sourceTree = "<group>"; };
 		5652620D1A1B591D00E0D78A /* CPObserverOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPObserverOperation.m; sourceTree = "<group>"; };
+		566AA6C21A22C10A00AE196B /* CPDownloadViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPDownloadViewController.h; sourceTree = "<group>"; };
+		566AA6C31A22C10A00AE196B /* CPDownloadViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPDownloadViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,8 +99,8 @@
 				565261FC1A1B3D8C00E0D78A /* Core */,
 				565261D51A1B3CA900E0D78A /* AppDelegate.h */,
 				565261D61A1B3CA900E0D78A /* AppDelegate.m */,
-				565261D81A1B3CA900E0D78A /* ViewController.h */,
-				565261D91A1B3CA900E0D78A /* ViewController.m */,
+				566AA6C21A22C10A00AE196B /* CPDownloadViewController.h */,
+				566AA6C31A22C10A00AE196B /* CPDownloadViewController.m */,
 				565261DB1A1B3CA900E0D78A /* Main.storyboard */,
 				565261DE1A1B3CA900E0D78A /* Images.xcassets */,
 				565261E01A1B3CA900E0D78A /* LaunchScreen.xib */,
@@ -254,12 +254,12 @@
 			files = (
 				565261FF1A1B3D9800E0D78A /* CPDownloadOperation.m in Sources */,
 				565262021A1B3E4F00E0D78A /* CPDownloadOperationManager.m in Sources */,
-				565261DA1A1B3CA900E0D78A /* ViewController.m in Sources */,
 				565261D71A1B3CA900E0D78A /* AppDelegate.m in Sources */,
 				5652620E1A1B591D00E0D78A /* CPObserverOperation.m in Sources */,
 				565262081A1B549D00E0D78A /* CPOperation.m in Sources */,
 				5652620B1A1B573800E0D78A /* CPZipArchiveOperation.m in Sources */,
 				565261D41A1B3CA900E0D78A /* main.m in Sources */,
+				566AA6C41A22C10A00AE196B /* CPDownloadViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
