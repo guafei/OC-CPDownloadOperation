@@ -15,8 +15,9 @@ typedef NS_ENUM(NSInteger, CPOperationState){
     CPOperationFinishedState    = 3,
 };
 
-static NSString * const kAFNetworkingLockName = @"com.alamofire.networking.operation.lock";
-NSString * const AFNetworkingOperationDidStartNotification = @"com.alamofire.networking.operation.start";
+static NSString * const CPOperationLockName = @"CPOperationLock";
+NSString * const CPOperationDidStartNotification = @"CPOperationDidStartNotification";
+NSString * const CPOperationDidFinishNotification = @"CPOperationDidFinishNotification";
 
 typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long totalBytes, long long totalBytesExpected);
 
@@ -35,8 +36,8 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 @implementation CPOperation
 
 
-
-#pragma mark threading behaviour
+#pragma mark -
+#pragma mark - threading behaviour
 
 + (void)runDownloadRequest:(id)__unused object {
     @autoreleasepool {
@@ -79,7 +80,8 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
     return multiTaskingSupported;
 }
 
-#pragma mark request behaviour
+#pragma mark -
+#pragma mark - request behaviour
 
 - (instancetype)initWithRequest:(NSURLRequest *)urlRequest
 {
@@ -89,7 +91,7 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
     }
     
     self.lock = [[NSRecursiveLock alloc] init];
-    self.lock.name = CPDownloadLockName;
+    self.lock.name = CPOperationLockName;
     self.request = urlRequest;
     self.state = CPOperationReadyState;
     self.runLoopModes = [NSSet setWithObject:NSRunLoopCommonModes];
@@ -97,8 +99,8 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
     return  self;
 }
 
-
-#pragma mark operation override
+#pragma mark -
+#pragma mark - operation override
 
 - (BOOL)isReady {
     return self.state == CPOperationReadyState && [super isReady];
@@ -152,7 +154,7 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
         dispatch_once(&onceToken, ^{
             NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"CPOperationSession"];
             //TODO (NSURLSession *)sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(id <NSURLSessionDelegate>)delegate delegateQueue:(NSOperationQueue *)queue;
-            self.downlSession = [NSURLSession sessionWithConfiguration:configuration];
+            self.downlSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue currentQueue]];
             self.downloadTask = [self.downlSession downloadTaskWithRequest:self.request];
             [_downloadTask resume];
         });
@@ -184,9 +186,85 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 }
 
 #pragma mark -
-#pragma mark - NSURLSessionDelegate and init
+#pragma mark - NSURLSessionDownloadDelegate
 
+/* Sent when a download task that has completed a download.  The delegate should
+ * copy or move the file at the given location to a new location as it will be
+ * removed when the delegate message returns. URLSession:task:didCompleteWithError: will
+ * still be called.
+ */
 
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
+didFinishDownloadingToURL:(NSURL *)location
+{
+    
+}
+
+/* Sent periodically to notify the delegate of download progress. */
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
+      didWriteData:(int64_t)bytesWritten
+ totalBytesWritten:(int64_t)totalBytesWritten
+totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
+{
+    
+}
+
+/* Sent when a download has been resumed. If a download failed with an
+ * error, the -userInfo dictionary of the error will contain an
+ * NSURLSessionDownloadTaskResumeData key, whose value is the resume
+ * data.
+ */
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
+ didResumeAtOffset:(int64_t)fileOffset
+expectedTotalBytes:(int64_t)expectedTotalBytes
+{
+    
+}
+
+#pragma mark -
+#pragma mark - NSURLSessionDelegate
+
+/* The last message a session receives.  A session will only become
+ * invalid because of a systemic error or when it has been
+ * explicitly invalidated, in which case the error parameter will be nil.
+ */
+
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
+{
+    
+}
+
+/* If implemented, when a connection level authentication challenge
+ * has occurred, this delegate will be given the opportunity to
+ * provide authentication credentials to the underlying
+ * connection. Some types of authentication will apply to more than
+ * one request on a given connection to a server (SSL Server Trust
+ * challenges).  If this delegate message is not implemented, the
+ * behavior will be to use the default handling, which may involve user
+ * interaction.
+ */
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler
+{
+
+}
+
+/* If an application has received an
+ * -application:handleEventsForBackgroundURLSession:completionHandler:
+ * message, the session delegate will receive this message to indicate
+ * that all messages previously enqueued for this session have been
+ * delivered.  At this time it is safe to invoke the previously stored
+ * completion handler, or to begin any internal updates that will
+ * result in invoking the completion handler.
+ */
+
+- (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session NS_AVAILABLE_IOS(7_0)
+{
+    
+}
 
 
 /*********************************

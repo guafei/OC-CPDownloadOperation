@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@interface CPOperation : NSOperation
+@interface CPOperation : NSOperation<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
 
 - (instancetype)initWithRequest:(NSURLRequest *)urlRequest;
 
