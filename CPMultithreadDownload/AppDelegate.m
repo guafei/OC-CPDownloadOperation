@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "CPDownloadViewController.h"
 
 @interface AppDelegate ()
 
@@ -16,6 +17,9 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    CPDownloadViewController *downloadVC = [[CPDownloadViewController alloc] init];
+    self.window.rootViewController = downloadVC;
+    
     // Override point for customization after application launch.
     return YES;
 }
