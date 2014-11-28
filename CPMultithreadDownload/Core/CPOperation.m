@@ -15,6 +15,10 @@ typedef NS_ENUM(NSInteger, CPOperationState){
     CPOperationFinishedState    = 3,
 };
 
+//for operation id
+int oidSerial = 0;
+
+static NSThread *downloadThread = nil;
 static NSString * const CPOperationLockName = @"CPOperationLock";
 NSString * const CPOperationDidStartNotification = @"CPOperationDidStartNotification";
 NSString * const CPOperationDidFinishNotification = @"CPOperationDidFinishNotification";
@@ -61,14 +65,25 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 }
 
 + (NSThread *)downloadThread {
-    static NSThread *_downloadThread = nil;
-    static dispatch_once_t oncePredicate;
-    dispatch_once(&oncePredicate, ^{
-        _downloadThread = [[NSThread alloc] initWithTarget:self selector:@selector(runDownloadRequest:) object:nil];
-        [_downloadThread start];
-    });
+//    static NSThread *_downloadThread = nil;
+//    static dispatch_once_t oncePredicate;
+//    dispatch_once(&oncePredicate, ^{
+//        NSLog(@"downloadThread create.");
+//        _downloadThread = [[NSThread alloc] initWithTarget:self selector:@selector(runDownloadRequest:) object:nil];
+//        [_downloadThread start];
+//    });
     
-    return _downloadThread;
+    if (downloadThread == nil) {
+        @synchronized(self) {
+            if (downloadThread == nil) {
+                NSLog(@"downloadThread create.");
+                downloadThread = [[NSThread alloc] initWithTarget:self selector:@selector(runDownloadRequest:) object:nil];
+                [downloadThread start];
+            }
+        }
+    }
+    
+    return downloadThread;
 }
 
 + (BOOL)isMultitaskingSupported
@@ -90,13 +105,14 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
         return nil;
     }
     
+    _oid = oidSerial++;
     self.lock = [[NSRecursiveLock alloc] init];
     self.lock.name = CPOperationLockName;
     self.request = urlRequest;
     self.state = CPOperationReadyState;
     self.runLoopModes = [NSSet setWithObject:NSRunLoopCommonModes];
     
-    return  self;
+    return self;
 }
 
 #pragma mark -
@@ -129,8 +145,6 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
         [self performSelector:@selector(operationDidStart) onThread:[[self class] downloadThread] withObject:nil waitUntilDone:NO modes:[self.runLoopModes allObjects]];
     }
     [self.lock unlock];
-    
-    
 }
 
 - (void)cancel
@@ -149,17 +163,15 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 - (void)operationDidStart
 {
     [self.lock lock];
-    if (![self isCancelled]) {
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"CPOperationSession"];
-            //TODO (NSURLSession *)sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(id <NSURLSessionDelegate>)delegate delegateQueue:(NSOperationQueue *)queue;
-            self.downlSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue currentQueue]];
-            self.downloadTask = [self.downlSession downloadTaskWithRequest:self.request];
-            [_downloadTask resume];
-        });
-        
+    if (![self isCancelled])
+    {
+        NSLog(@"operationDidStart called");
+        NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"CPOperationSession"];
+        self.downlSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:[NSOperationQueue currentQueue]];
+        self.downloadTask = [self.downlSession downloadTaskWithRequest:self.request];
+        [_downloadTask resume];
     }
+    
     [self.lock unlock];
     
 }
@@ -197,7 +209,7 @@ typedef void (^CPOperationDownloadProgressBlock)(NSUInteger bytes, long long tot
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask
 didFinishDownloadingToURL:(NSURL *)location
 {
-    
+    NSLog(@"downloadTask didFinishDownloadingToURL called");
 }
 
 /* Sent periodically to notify the delegate of download progress. */
@@ -207,7 +219,7 @@ didFinishDownloadingToURL:(NSURL *)location
  totalBytesWritten:(int64_t)totalBytesWritten
 totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
 {
-    
+    NSLog(@"Operation id: %d didWriteData: %lld totalBytesWritten: %lld totalBytesExpectedToWrite: %lld ",_oid,bytesWritten,totalBytesWritten,totalBytesExpectedToWrite);
 }
 
 /* Sent when a download has been resumed. If a download failed with an
@@ -220,7 +232,7 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
  didResumeAtOffset:(int64_t)fileOffset
 expectedTotalBytes:(int64_t)expectedTotalBytes
 {
-    
+    NSLog(@"downloadTask didResumeAtOffset expectedTotalBytes called");
 }
 
 #pragma mark -
@@ -233,7 +245,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes
 
 - (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error
 {
-    
+    NSLog(@"didBecomeInvalidWithError called");
 }
 
 /* If implemented, when a connection level authentication challenge
@@ -249,7 +261,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler
 {
-
+    NSLog(@"didReceiveChallenge called");
 }
 
 /* If an application has received an
@@ -263,7 +275,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes
 
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session NS_AVAILABLE_IOS(7_0)
 {
-    
+    NSLog(@"URLSessionDidFinishEventsForBackgroundURLSession called");
 }
 
 

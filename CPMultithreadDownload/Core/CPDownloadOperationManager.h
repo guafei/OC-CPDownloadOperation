@@ -13,4 +13,10 @@
 
 - (instancetype)initOperationManagerWithUrlArray:(NSMutableArray *)downloadUrls;
 
+- (void)startDownloadAll;
+
+- (void)startDownloadWithUrl:(NSString *) url;
+
+- (void)stopDownloadWithUrl:(NSString *) url;
+
 @end
