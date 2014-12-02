@@ -11,6 +11,12 @@
 
 @interface CPOperation : NSOperation<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
 
+@property (nonatomic, assign, readonly) int oid;
+
 - (instancetype)initWithRequest:(NSURLRequest *)urlRequest;
+
+//- (void)start;
+//
+//- (void)cancel;
 
 @end
