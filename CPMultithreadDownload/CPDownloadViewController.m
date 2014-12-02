@@ -33,7 +33,6 @@
     }
     
     [self __init];
-    
     return self;
 }
 
